@@ -1,14 +1,25 @@
 version: "1"
 
+networks:
+  iam-service:
+    driver: bridge
+
 services:
-  mysql:
-    image: mysql:8.0.32
-
+  db:
+    image: postgres:13.8
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 123456a@
-      MYSQL_DATABASE: healthnet
-      MYSQL_USER: anhnv
-      MYSQL_PASSWORD: 123456
-
+      - POSTGRES_USER=anhnv
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=healthnet
     ports:
-      - "3308:3306"
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - iam-service
+
+
+volumes:
+  postgres_data:
+    driver: local

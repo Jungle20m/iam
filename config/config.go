@@ -32,7 +32,7 @@ type LogConfig struct {
 type Config struct {
 	App     AppConfig     `yaml:"app"`
 	Swagger SwaggerConfig `yaml:"swagger"`
-	Mysql   MysqlConfig   `yaml:"mysql"`
+	Mysql   MysqlConfig   `yaml:"mgorm"`
 	Log     LogConfig     `yaml:"log"`
 }
 
