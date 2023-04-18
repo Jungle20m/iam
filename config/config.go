@@ -20,7 +20,7 @@ type SwaggerConfig struct {
 }
 
 type MysqlConfig struct {
-	Dns string `yaml:"dns"`
+	Dsn string `yaml:"dsn"`
 }
 
 type LogConfig struct {
@@ -32,7 +32,7 @@ type LogConfig struct {
 type Config struct {
 	App     AppConfig     `yaml:"app"`
 	Swagger SwaggerConfig `yaml:"swagger"`
-	Mysql   MysqlConfig   `yaml:"mgorm"`
+	Mysql   MysqlConfig   `yaml:"mysql"`
 	Log     LogConfig     `yaml:"log"`
 }
 

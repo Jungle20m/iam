@@ -3,8 +3,15 @@ package main
 import (
 	"fmt"
 	"github.com/pquerna/otp/totp"
+	"iam/common"
+	"iam/config"
+	"iam/internal/server"
+	"iam/sdk/httpserver"
 	"iam/sdk/mgorm"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -32,31 +39,27 @@ func Otp() {
 }
 
 func main() {
-	//conf, err := config.LoadConfig()
-	//if err != nil {
-	//	log.Fatalf("load config error: %v\n", err)
-	//}
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("load config error: %v\n", err)
+	}
 
-	db, err := mgorm.New(
-		"host=localhost user=anhnv password=123456 dbname=healthnet port=5432 sslmode=disable TimeZone=Asia/Shanghai",
-		mgorm.WithConnectionType("postgres"))
+	db, err := mgorm.New(conf.Mysql.Dsn)
 	if err != nil {
 		log.Fatalf("connect mgorm error: %v\n", err)
 	}
 
-	fmt.Println(db)
+	appCtx := common.NewAppContext(conf, db.Connection)
 
-	//appCtx := common.NewAppContext(conf, db)
-	//
-	//httpHandler := server.NewHttpHandler(appCtx)
-	//
-	//server := httpserver.New(httpHandler, httpserver.WithAddress(conf.App.HttpHost, conf.App.HttpPort))
-	//server.Start()
-	//
-	//quit := make(chan os.Signal, 1)
-	//signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	//
-	//<-quit
-	//
-	//server.Shutdown()
+	httpHandler := server.NewHttpHandler(appCtx)
+
+	server := httpserver.New(httpHandler, httpserver.WithAddress(conf.App.HttpHost, conf.App.HttpPort))
+	server.Start()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	<-quit
+
+	server.Shutdown()
 }

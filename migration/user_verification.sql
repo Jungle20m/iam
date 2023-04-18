@@ -1,10 +1,7 @@
-CREATE TABLE `users` (
+CREATE TABLE `user_verification` (
      `id` int NOT NULL AUTO_INCREMENT,
-     `name` varchar(45) DEFAULT NULL,
-     `phone` varchar(45) DEFAULT NULL,
-     `email` varchar(45) DEFAULT NULL,
-     `password` varchar(255) NOT NULL,
-     `is_active` tinyint DEFAULT NULL,
+     `token` varchar(45) DEFAULT NULL,
+     `expire_time` datetime DEFAULT NULL,
      `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
      `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
      PRIMARY KEY (`id`)

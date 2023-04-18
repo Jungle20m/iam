@@ -9,8 +9,20 @@ import (
 	"net/http"
 )
 
+type RegisterBody struct {
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+}
+
 func Register(appCtx common.IAppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var body RegisterBody
+		if err := c.ShouldBind(&body); err != nil {
+			c.JSON(http.StatusBadRequest, "")
+			return
+		}
+
+		fmt.Printf("body: %v\n", body)
 
 		stor := storage.NewMysqlStorage(appCtx.GetDB())
 		biz := business.NewUserBusiness(appCtx, stor)
@@ -21,6 +33,6 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 			fmt.Println(err)
 		}
 
-		c.JSON(http.StatusOK, "success")
+		c.JSON(http.StatusOK, "success to register")
 	}
 }

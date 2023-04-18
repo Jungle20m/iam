@@ -6,6 +6,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"iam/common"
 	"iam/docs"
+	"iam/internal/modules/auth/transport"
 	"net/http"
 )
 
@@ -35,9 +36,11 @@ func NewHttpHandler(appCtx common.IAppContext) *gin.Engine {
 
 	// Router
 	v1 := handler.Group("iam/v1/")
-	{
-		v1.POST("/register", func(c *gin.Context) { c.JSON(http.StatusOK, "success") })
-	}
+
+	// health check
+	v1.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, "pong") })
+
+	v1.POST("/register", transport.Register(appCtx))
 
 	return handler
 

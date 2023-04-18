@@ -46,7 +46,6 @@ func New(dsn string, opts ...Option) (*Database, error) {
 
 	switch db.connectionType {
 	case Mysql:
-		fmt.Println("mysql")
 		conn, err := sql.Open("mysql", dsn)
 		if err != nil {
 			return nil, err
@@ -65,8 +64,6 @@ func New(dsn string, opts ...Option) (*Database, error) {
 		db.Connection = gormDB
 		return db, nil
 	case Postgres:
-		fmt.Println("postgres")
-
 		gormDB, err := gorm.Open(postgres.New(postgres.Config{
 			DSN: dsn,
 		}), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
