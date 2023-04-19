@@ -1,11 +1,11 @@
 package transport
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"iam/common"
 	"iam/internal/modules/auth/business"
 	"iam/internal/modules/auth/storage"
+	mhttp "iam/sdk/httpserver"
 	"net/http"
 )
 
@@ -22,17 +22,15 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("body: %v\n", body)
+		st := storage.NewMysqlStorage(appCtx.GetDB())
+		biz := business.NewUserBusiness(appCtx, st)
 
-		stor := storage.NewMysqlStorage(appCtx.GetDB())
-		biz := business.NewUserBusiness(appCtx, stor)
-
-		err := biz.Register(c.Request.Context())
-
+		err := biz.Register(c.Request.Context(), body.PhoneNumber, body.Password)
 		if err != nil {
-			fmt.Println(err)
+			c.JSON(http.StatusBadRequest, mhttp.SimpleErrorResponse(err, "error to registration"))
+			return
 		}
 
-		c.JSON(http.StatusOK, "success to register")
+		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse("success"))
 	}
 }

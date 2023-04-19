@@ -2,6 +2,17 @@ package model
 
 import "time"
 
+// UserStatus
+// - unverified
+// - active
+// - inactive
+
+const (
+	UserUnverifiedStatus string = "unverified"
+	UserActiveStatus     string = "active"
+	UserInactiveStatus   string = "inactive"
+)
+
 type UserAccount struct {
 	ID                     int        `gorm:"column:id"`
 	UserName               string     `gorm:"column:name"`

@@ -1,4 +1,4 @@
-CREATE TABLE `user_verification` (
+CREATE TABLE `healthnet`.`user_verification` (
      `id` int NOT NULL AUTO_INCREMENT,
      `token` varchar(45) DEFAULT NULL,
      `expire_time` datetime DEFAULT NULL,

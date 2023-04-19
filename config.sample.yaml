@@ -11,7 +11,7 @@ swagger:
   host: "localhost:8080"
 
 mysql:
-  dns: "anhnv:123456@tcp(localhost:3308)/healthnet?charset=utf8mb4&parseTime=True&loc=Local"
+  dsn: "anhnv:123456@tcp(localhost:3308)/healthnet?charset=utf8mb4&parseTime=True&loc=Local"
 
 log:
   # output int. Các giá trị không hợp lệ được coi như mặc định
