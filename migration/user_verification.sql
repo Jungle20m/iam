@@ -1,7 +1,7 @@
 CREATE TABLE `healthnet`.`user_verification` (
      `id` int NOT NULL AUTO_INCREMENT,
      `token` varchar(45) DEFAULT NULL,
-     `expire_time` datetime DEFAULT NULL,
+     `period` int DEFAULT NULL,
      `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
      `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
      PRIMARY KEY (`id`)

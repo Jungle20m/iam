@@ -5,9 +5,9 @@ import "time"
 type UserVerification struct {
 	ID         int        `gorm:"column:id"`
 	Token      string     `gorm:"column:token"`
-	ExpireTime *time.Time `gorm:"column:expire_time"`
-	CreateTime *time.Time `gorm:"column:create_time"`
-	UpdateTime *time.Time `gorm:"column:update_time"`
+	Period     int        `gorm:"column:period"`
+	CreateTime *time.Time `gorm:"column:create_time; autoCreateTime"`
+	UpdateTime *time.Time `gorm:"column:update_time; autoUpdateTime"`
 }
 
 func (UserVerification) TableName() string {

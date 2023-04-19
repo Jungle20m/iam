@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -18,9 +17,7 @@ func NewMysqlStorage(db *gorm.DB) *Storage {
 func (s *Storage) getConnection(ctx context.Context) *gorm.DB {
 	tx, ok := ctx.Value(TransactionContextKey).(*gorm.DB)
 	if ok {
-		fmt.Println("connection with transaction")
 		return tx
 	}
-	fmt.Println("connection without transaction")
 	return s.db
 }
