@@ -22,6 +22,20 @@ func (e *ErrorResponse) Error() string {
 	return e.RootErr().Error()
 }
 
+func HttpErrorResponse(err error) *ErrorResponse {
+	if e, ok := err.(*ErrorResponse); ok {
+		return e
+	} else {
+		return &ErrorResponse{
+			StatusCode: http.StatusBadRequest,
+			RootError:  err,
+			ErrorLog:   logFromError(err),
+			Message:    "error not found",
+			ErrorCode:  "ERROR_NOT_FOUND",
+		}
+	}
+}
+
 func FullErrorResponse(statusCode int, err error, errorLog, message, errorCode string) *ErrorResponse {
 	return &ErrorResponse{
 		StatusCode: statusCode,
@@ -32,11 +46,29 @@ func FullErrorResponse(statusCode int, err error, errorLog, message, errorCode s
 	}
 }
 
-func SimpleErrorResponse(err error, message string) *ErrorResponse {
+func BadRequestErrorResponse(err error, message string, errorCode string) *ErrorResponse {
 	return &ErrorResponse{
 		StatusCode: http.StatusBadRequest,
 		RootError:  err,
-		ErrorLog:   err.Error(),
+		ErrorLog:   logFromError(err),
 		Message:    message,
+		ErrorCode:  errorCode,
 	}
+}
+
+func InternalErrorResponse(err error, message string, errorCode string) *ErrorResponse {
+	return &ErrorResponse{
+		StatusCode: http.StatusInternalServerError,
+		RootError:  err,
+		ErrorLog:   logFromError(err),
+		Message:    message,
+		ErrorCode:  errorCode,
+	}
+}
+
+func logFromError(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
 }

@@ -18,7 +18,7 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body RegisterBody
 		if err := c.ShouldBind(&body); err != nil {
-			c.JSON(http.StatusBadRequest, "")
+			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
 		}
 
@@ -27,7 +27,7 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 
 		err := biz.Register(c.Request.Context(), body.PhoneNumber, body.Password)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, mhttp.SimpleErrorResponse(err, "error to registration"))
+			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
 		}
 

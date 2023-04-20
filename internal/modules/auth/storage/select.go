@@ -3,8 +3,8 @@ package storage
 import (
 	"context"
 	"errors"
-	"fmt"
 	"gorm.io/gorm"
+	"iam/common"
 	"iam/internal/modules/auth/model"
 )
 
@@ -21,7 +21,7 @@ func (s *Storage) GetUserByPhone(ctx context.Context, phoneNumber string) (*mode
 	err := db.Raw(sql, phoneNumber).First(&record).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("record not found")
+			return nil, common.ErrRecordNotFound
 		}
 		return nil, err
 	}

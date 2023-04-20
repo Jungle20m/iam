@@ -15,8 +15,8 @@ const (
 
 type UserAccount struct {
 	ID                     int        `gorm:"column:id"`
-	UserName               string     `gorm:"column:name"`
-	PhoneNumber            string     `gorm:"column:phone"`
+	UserName               string     `gorm:"column:user_name"`
+	PhoneNumber            string     `gorm:"column:phone_number"`
 	Email                  string     `gorm:"column:email"`
 	Password               string     `gorm:"column:password"`
 	PasswordSalt           string     `gorm:"column:password_salt"`
