@@ -41,6 +41,11 @@ func NewHttpHandler(appCtx common.IAppContext) *gin.Engine {
 	v1.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, "pong") })
 
 	v1.POST("/register", transport.Register(appCtx))
+	v1.POST("/register/verification", transport.VerifyRegister(appCtx))
+	v1.POST("/login", transport.Login(appCtx))
+	v1.POST("/logout", transport.Logout(appCtx))
+	v1.POST("/reset-password")
+	v1.POST("/forget-password")
 
 	return handler
 

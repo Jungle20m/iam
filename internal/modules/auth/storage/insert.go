@@ -15,3 +15,8 @@ func (s *Storage) CreateUserAccount(ctx context.Context, ua model.UserAccount) e
 	db := s.getConnection(ctx)
 	return db.Create(&ua).Error
 }
+
+func (s *Storage) CreateTokenWhileList(ctx context.Context, twl model.TokenWhileList) error {
+	db := s.getConnection(ctx)
+	return db.Create(&twl).Error
+}

@@ -10,9 +10,7 @@ import (
 
 func (s *Storage) GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error) {
 	db := s.getConnection(ctx)
-
 	var record model.UserAccount
-
 	sql := `
 			SELECT id, user_name, phone_number, email, password, password_salt, password_hash_algorithms, user_status, user_verification_id, registration_time, create_time, update_time
 			FROM user_account
@@ -25,6 +23,23 @@ func (s *Storage) GetUserByPhone(ctx context.Context, phoneNumber string) (*mode
 		}
 		return nil, err
 	}
+	return &record, nil
+}
 
+func (s *Storage) GetUserVerificationByID(ctx context.Context, id int) (*model.UserVerification, error) {
+	db := s.getConnection(ctx)
+	var record model.UserVerification
+	sql := `
+			SELECT id, token, expired, create_time, update_time
+			FROM user_verification
+			WHERE id=?
+		   `
+	err := db.Raw(sql, id).First(&record).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, common.ErrRecordNotFound
+		}
+		return nil, err
+	}
 	return &record, nil
 }
