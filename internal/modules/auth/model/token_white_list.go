@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type TokenWhileList struct {
+type TokenWhiteList struct {
 	ID           int        `gorm:"column:id"`
 	AccessToken  string     `gorm:"column:access_token"`
 	RefreshToken string     `gorm:"column:refresh_token"`
@@ -10,6 +10,6 @@ type TokenWhileList struct {
 	UpdateTime   *time.Time `gorm:"column:update_time; autoUpdateTime"`
 }
 
-func (TokenWhileList) TableName() string {
-	return "token_while_list"
+func (TokenWhiteList) TableName() string {
+	return "token_white_list"
 }
