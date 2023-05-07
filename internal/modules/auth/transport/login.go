@@ -25,12 +25,13 @@ func Login(appCtx common.IAppContext) gin.HandlerFunc {
 		st := storage.NewMysqlStorage(appCtx.GetDB())
 		biz := business.NewLoginBusiness(appCtx, st)
 
-		if err := biz.Login(c.Request.Context(), body.PhoneNumber, body.Password); err != nil {
+		auth, err := biz.Login(c.Request.Context(), body.PhoneNumber, body.Password)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
 		}
 
-		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(body))
+		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(auth))
 	}
 }
 

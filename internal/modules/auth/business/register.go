@@ -24,7 +24,7 @@ type IRegisterStorage interface {
 	CreateUserAccount(ctx context.Context, ua model.UserAccount) error
 	UpdateUserAccount(ctx context.Context, ua model.UserAccount) error
 	GetUserVerificationByID(ctx context.Context, id int) (*model.UserVerification, error)
-	CreateTokenWhileList(ctx context.Context, twl model.TokenWhileList) error
+	CreateTokenWhileList(ctx context.Context, twl model.TokenWhiteList) error
 }
 
 type registerBusiness struct {
@@ -148,9 +148,10 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, phoneNumber, ot
 			return err
 		}
 		// Add token to while list
-		twl := model.TokenWhileList{
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
+		twl := model.TokenWhiteList{
+			UserAccountID: ua.ID,
+			AccessToken:   accessToken,
+			RefreshToken:  refreshToken,
 		}
 		if err := biz.storage.CreateTokenWhileList(txContext, twl); err != nil {
 			return err
