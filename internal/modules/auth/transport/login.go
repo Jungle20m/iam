@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"iam/common"
 	"iam/internal/modules/auth/business"
@@ -26,21 +25,12 @@ func Login(appCtx common.IAppContext) gin.HandlerFunc {
 		st := storage.NewMysqlStorage(appCtx.GetDB())
 		biz := business.NewLoginBusiness(appCtx, st)
 
-		data, err := biz.Login(c.Request.Context(), body.PhoneNumber, body.Password)
+		auth, err := biz.Login(c.Request.Context(), body.PhoneNumber, body.Password)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
 		}
 
-		fmt.Println(data)
-
-		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(body))
-	}
-}
-
-func Logout(appCtx common.IAppContext) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse("success"))
+		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(auth))
 	}
 }
