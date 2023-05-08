@@ -12,11 +12,6 @@ import (
 
 const OtpPeriod int = 30
 
-const (
-	AccessSecretKey  = "ACCESS_SECRET_KEY"
-	RefreshSecretKey = "REFRESH_SECRET_KEY"
-)
-
 type IRegisterStorage interface {
 	WithTx(ctx context.Context, fn func(c context.Context) error) error
 	GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error)

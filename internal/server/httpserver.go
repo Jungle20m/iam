@@ -7,6 +7,7 @@ import (
 	"iam/common"
 	"iam/docs"
 	"iam/internal/modules/auth/transport"
+	"iam/internal/server/middleware"
 	"net/http"
 )
 
@@ -43,9 +44,8 @@ func NewHttpHandler(appCtx common.IAppContext) *gin.Engine {
 	v1.POST("/register", transport.Register(appCtx))
 	v1.POST("/register/verification", transport.VerifyRegister(appCtx))
 	v1.POST("/login", transport.Login(appCtx))
-	v1.POST("/logout", transport.Logout(appCtx))
+	v1.POST("/logout", middleware.AuthMW(), transport.Logout(appCtx))
 	v1.POST("/reset-password")
-	v1.POST("/forget-password")
 
 	return handler
 

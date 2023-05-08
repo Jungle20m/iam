@@ -30,10 +30,17 @@ func HttpErrorResponse(err error) *ErrorResponse {
 			StatusCode: http.StatusBadRequest,
 			RootError:  err,
 			ErrorLog:   logFromError(err),
-			Message:    "error not found",
-			ErrorCode:  "ERROR_NOT_FOUND",
+			Message:    "unknown error",
+			ErrorCode:  "UNKNOWN_ERROR",
 		}
 	}
+}
+
+func logFromError(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
 }
 
 func FullErrorResponse(statusCode int, err error, errorLog, message, errorCode string) *ErrorResponse {
@@ -66,9 +73,12 @@ func InternalErrorResponse(err error, message string, errorCode string) *ErrorRe
 	}
 }
 
-func logFromError(err error) string {
-	if err != nil {
-		return err.Error()
+func AuthRequireErrorResponse(err error) *ErrorResponse {
+	return &ErrorResponse{
+		StatusCode: http.StatusNetworkAuthenticationRequired,
+		RootError:  err,
+		ErrorLog:   err.Error(),
+		Message:    "",
+		ErrorCode:  "AUTHENTICATION_REQUIRE",
 	}
-	return ""
 }

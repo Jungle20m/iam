@@ -34,10 +34,3 @@ func Login(appCtx common.IAppContext) gin.HandlerFunc {
 		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(auth))
 	}
 }
-
-func Logout(appCtx common.IAppContext) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse("success"))
-	}
-}
