@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -15,9 +16,7 @@ type authHeader struct {
 }
 
 type Credential struct {
-	UserID   string `json:"working_site_id"`
-	ExpireAt string `json:"worker_site_id"`
-	IssueAt  string
+	UserID int `json:"user_id"`
 }
 
 func AuthMW() gin.HandlerFunc {
@@ -38,14 +37,13 @@ func AuthMW() gin.HandlerFunc {
 		}
 		bearerToken := token[1]
 
-		decodedToken, err := jwt.ParseWithClaims(bearerToken, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		decodedToken, err := jwt.Parse(bearerToken, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			// Return secret key
 			return []byte(common.AccessSecretKey), nil
 		})
-		// Kiểm tra lỗi
 		if err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.BadRequestErrorResponse(err, "token invalid", "TOKEN_INVALID"))
 			c.Abort()
@@ -53,14 +51,24 @@ func AuthMW() gin.HandlerFunc {
 		}
 
 		// Get claims from token
-		//var credential Credential
-		if claims, ok := decodedToken.Claims.(*jwt.MapClaims); ok && decodedToken.Valid {
-			fmt.Println("Hello,", (*claims)["user_id"])
-			fmt.Printf("claims: %+v\n", claims)
-		} else {
-			fmt.Println("Invalid token")
+		claims, ok := decodedToken.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusBadRequest, mhttp.BadRequestErrorResponse(err, "token invalid", "TOKEN_INVALID"))
+			c.Abort()
+			return
 		}
+
+		credential := Credential{
+			UserID: int(claims["user_id"].(float64)),
+		}
+
+		c.Set("credential", credential)
 
 		c.Next()
 	}
+}
+
+func GetCredential(ctx context.Context) (*Credential, error) {
+	//cred, ok := c.Get
+	return nil, nil
 }

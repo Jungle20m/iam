@@ -17,6 +17,8 @@ func Logout(appCtx common.IAppContext) gin.HandlerFunc {
 
 		fmt.Println("hello anh em")
 
+		fmt.Println(c.Get("user_id"))
+
 		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse("success"))
 	}
 }
