@@ -6,6 +6,7 @@ import (
 )
 
 type ILogoutStorage interface {
+	DeleteToken(ctx context.Context, userID int) error
 }
 
 type logoutBusiness struct {
@@ -20,6 +21,6 @@ func NewLogoutBusiness(appCtx common.IAppContext, storage ILogoutStorage) *logou
 	}
 }
 
-func (biz *logoutBusiness) Logout(ctx context.Context) {
-
+func (biz *logoutBusiness) Logout(ctx context.Context, userID int) error {
+	return biz.storage.DeleteToken(ctx, userID)
 }

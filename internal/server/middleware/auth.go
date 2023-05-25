@@ -9,6 +9,7 @@ import (
 	mhttp "iam/sdk/httpserver"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type authHeader struct {
@@ -58,17 +59,25 @@ func AuthMW() gin.HandlerFunc {
 			return
 		}
 
+		// Validation expire time
+		exp := int64(claims["exp"].(float64))
+		if exp < time.Now().Unix() {
+			c.JSON(http.StatusBadRequest, mhttp.BadRequestErrorResponse(err, "token has expired", "TOKEN_EXPIRED"))
+			c.Abort()
+			return
+		}
+
 		credential := Credential{
 			UserID: int(claims["user_id"].(float64)),
 		}
 
-		c.Set("credential", credential)
-
+		c.Set("CREDENTIAL", credential)
 		c.Next()
 	}
 }
 
-func GetCredential(ctx context.Context) (*Credential, error) {
-	//cred, ok := c.Get
-	return nil, nil
+func GetCredential(ctx context.Context) Credential {
+	value := ctx.Value("CREDENTIAL")
+	credential := value.(Credential)
+	return credential
 }
