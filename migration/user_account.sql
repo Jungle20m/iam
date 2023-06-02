@@ -7,9 +7,10 @@ CREATE TABLE `healthnet`.`user_account` (
     `password_salt` varchar(255) DEFAULT NULL,
     `password_hash_algorithms` varchar(45) DEFAULT NULL,
     `user_status` varchar(45) DEFAULT NULL,
-    `user_verification_id` int DEFAULT NULL,
     `registration_time` datetime DEFAULT NULL,
     `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
     `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
