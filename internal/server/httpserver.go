@@ -7,7 +7,6 @@ import (
 	"iam/common"
 	"iam/docs"
 	"iam/internal/modules/auth/transport"
-	"iam/internal/server/middleware"
 	"net/http"
 )
 
@@ -42,13 +41,13 @@ func NewHttpHandler(appCtx common.IAppContext) *gin.Engine {
 	v1.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, "pong") })
 
 	v1.POST("/register", transport.Register(appCtx))
-	v1.POST("/register/verify", transport.VerifyRegister(appCtx))
-
-	v1.POST("/auth/token", transport.Login(appCtx))
-	v1.POST("/auth/revoke", middleware.AuthMW(), transport.Logout(appCtx))
-
-	v1.POST("/password/recover")
-	v1.POST("/password/verify")
+	//v1.POST("/register/verify", transport.VerifyRegister(appCtx))
+	//
+	//v1.POST("/auth/token", transport.Login(appCtx))
+	//v1.POST("/auth/revoke", middleware.AuthMW(), transport.Logout(appCtx))
+	//
+	//v1.POST("/password/recover")
+	//v1.POST("/password/verify")
 
 	return handler
 

@@ -63,13 +63,13 @@ func BadRequestErrorResponse(err error, message string, errorCode string) *Error
 	}
 }
 
-func InternalErrorResponse(err error, message string, errorCode string) *ErrorResponse {
+func InternalErrorResponse(err error, message string) *ErrorResponse {
 	return &ErrorResponse{
 		StatusCode: http.StatusInternalServerError,
 		RootError:  err,
 		ErrorLog:   logFromError(err),
 		Message:    message,
-		ErrorCode:  errorCode,
+		ErrorCode:  "INTERNAL_SERVER_ERROR",
 	}
 }
 
