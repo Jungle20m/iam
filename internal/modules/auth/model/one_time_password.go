@@ -7,7 +7,7 @@ type OneTimePassword struct {
 	UserID      int        `gorm:"column:user_id"`
 	ClientID    string     `gorm:"column:client_id"`
 	PhoneNumber string     `gorm:"column:phone_number"`
-	OTP         string     `gorm:"column:token"`
+	OTP         string     `gorm:"column:otp"`
 	Expired     int64      `gorm:"column:expired"`
 	MessageBody string     `gorm:"column:message_body"`
 	CreateTime  *time.Time `gorm:"column:create_time; autoCreateTime"`

@@ -32,6 +32,7 @@ func (UserAccount) TableName() string {
 }
 
 type AuthorizedData struct {
+	IdToken      string `json:"id_token"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refreshToken"`
 }

@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	AccessSecretKey  = "ACCESS_SECRET_KEY"
-	RefreshSecretKey = "REFRESH_SECRET_KEY"
+	AccessSecretKey     = "ACCESS_SECRET_KEY"
+	RefreshSecretKey    = "REFRESH_SECRET_KEY"
+	AccessTokenExpired  = 1
+	RefreshTokenExpired = 8
 )
 
 func GenerateHashPassword(password string) (string, error) {
@@ -24,11 +26,20 @@ func VerifyPassword(hashPassword, password string) bool {
 	return true
 }
 
-func GenerateToken(authorized bool, userID int, expireInHours int, secretKey string) (string, error) {
+func GenerateToken(authorized bool, userID int, name, email, secretKey string, expireInHours int) (string, error) {
 	claims := jwt.MapClaims{}
+
+	now := time.Now()
+
 	claims["authorized"] = authorized
+	claims["iss"] = "https://my-domain.auth0.com"
+	claims["sub"] = "auth0|123456"
+	claims["name"] = name
+	claims["email"] = email
 	claims["user_id"] = userID
-	claims["exp"] = time.Now().Add(time.Hour * time.Duration(expireInHours)).Unix()
+	claims["iat"] = now.Unix()
+	claims["exp"] = now.Add(time.Hour * time.Duration(expireInHours)).Unix()
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(secretKey))
 	if err != nil {
@@ -38,7 +49,6 @@ func GenerateToken(authorized bool, userID int, expireInHours int, secretKey str
 }
 
 func VerifyToken(token, secretKey string) {
-
 	secret := []byte(secretKey)
 
 	decodedToken, err := jwt.ParseWithClaims(token, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -49,13 +59,11 @@ func VerifyToken(token, secretKey string) {
 		// Trả về secret key
 		return secret, nil
 	})
-
 	// Kiểm tra lỗi
 	if err != nil {
 		fmt.Println("Error parsing token:", err)
 		return
 	}
-
 	// Lấy claims từ token
 	if claims, ok := decodedToken.Claims.(*jwt.MapClaims); ok && decodedToken.Valid {
 		fmt.Println("Hello,", (*claims)["user_id"])
@@ -63,4 +71,8 @@ func VerifyToken(token, secretKey string) {
 	} else {
 		fmt.Println("Invalid token")
 	}
+}
+
+func GenerateIDToken() (string, error) {
+	return "", nil
 }

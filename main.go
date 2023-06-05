@@ -59,7 +59,7 @@ func main() {
 	server.Start()
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os., syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
 

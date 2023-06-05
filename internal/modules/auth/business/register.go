@@ -16,10 +16,10 @@ type IRegisterStorage interface {
 	WithTx(ctx context.Context, fn func(c context.Context) error) error
 	GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error)
 	CreateOneTimePassword(ctx context.Context, uv model.OneTimePassword) (*model.OneTimePassword, error)
-	CreateUserAccount(ctx context.Context, ua model.UserAccount) error
+	CreateUserAccount(ctx context.Context, ua *model.UserAccount) error
 	UpdateUserAccount(ctx context.Context, ua model.UserAccount) error
-	//GetUserVerificationByID(ctx context.Context, id int) (*model.UserVerification, error)
-	//CreateTokenWhileList(ctx context.Context, twl model.TokenWhiteList) error
+	GetLastOneTimePasswordByUserID(ctx context.Context, userID int, clientID string) (*model.OneTimePassword, error)
+	CreateUserToken(ctx context.Context, ut model.UserToken) error
 }
 
 type registerBusiness struct {
@@ -57,6 +57,7 @@ func (biz *registerBusiness) generateOTP(ctx context.Context, clientID, phoneNum
 	return biz.storage.CreateOneTimePassword(ctx, otp)
 }
 
+// Register is func to registration account
 func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber, password string) error {
 	err := biz.storage.WithTx(ctx, func(txContext context.Context) error {
 		// Generate hash password
@@ -83,7 +84,7 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 				UserStatus:  model.UserUnverifiedStatus,
 			}
 			// Create new user account
-			if err := biz.storage.CreateUserAccount(txContext, newUA); err != nil {
+			if err := biz.storage.CreateUserAccount(txContext, &newUA); err != nil {
 				return mhttp.InternalErrorResponse(err, "")
 			}
 			userID = newUA.ID
@@ -99,7 +100,6 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 			}
 			userID = ua.ID
 		}
-
 		// Create OTP
 		_, err = biz.generateOTP(txContext, clientID, phoneNumber, userID)
 		if err != nil {
@@ -110,63 +110,67 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 	return err
 }
 
-//func (biz *registerBusiness) VerifyRegister(ctx context.Context, phoneNumber, otp string) (*model.AuthorizedData, error) {
-//	// Get user and verify otp
-//	ua, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
-//	if err != nil {
-//		if err == common.ErrRecordNotFound {
-//			return nil, fmt.Errorf("record not found")
-//		}
-//		return nil, err
-//	}
-//	// Check if user has existed?
-//	if ua.UserStatus != model.UserUnverifiedStatus {
-//		return nil, mhttp.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
-//	}
-//
-//	uv, err := biz.storage.GetUserVerificationByID(ctx, ua.UserVerificationID)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if uv.Token != otp || uv.Expired < time.Now().Unix() {
-//		return nil, mhttp.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
-//	}
-//
-//	accessToken, err := GenerateToken(true, ua.ID, 24, AccessSecretKey)
-//	if err != nil {
-//		return nil, err
-//	}
-//	refreshToken, err := GenerateToken(true, ua.ID, 24*30, RefreshSecretKey)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	// Save token and activate user
-//	err = biz.storage.WithTx(ctx, func(txContext context.Context) error {
-//		// Activate user
-//		now := time.Now()
-//		ua.UserStatus = model.UserActiveStatus
-//		ua.RegistrationTime = &now
-//		if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
-//			return err
-//		}
-//		// Add token to while list
-//		twl := model.TokenWhiteList{
-//			UserAccountID: ua.ID,
-//			AccessToken:   accessToken,
-//			RefreshToken:  refreshToken,
-//		}
-//		if err := biz.storage.CreateTokenWhileList(txContext, twl); err != nil {
-//			return err
-//		}
-//		return nil
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &model.AuthorizedData{
-//		AccessToken:  accessToken,
-//		RefreshToken: refreshToken,
-//	}, nil
-//}
+// VerifyRegister is func to verify otp
+func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phoneNumber, otpCode string) (*model.AuthorizedData, error) {
+	// Verify user, check if user has existed?
+	ua, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
+	if err != nil {
+		if err == common.ErrRecordNotFound {
+			return nil, fmt.Errorf("record not found")
+		}
+		return nil, err
+	}
+	// Check if user has existed?
+	if ua.UserStatus != model.UserUnverifiedStatus {
+		return nil, mhttp.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
+	}
+	
+	otp, err := biz.storage.GetLastOneTimePasswordByUserID(ctx, ua.ID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	if otp.OTP != otpCode || otp.Expired < time.Now().Unix() {
+		return nil, mhttp.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
+	}
+
+	accessToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, AccessSecretKey, AccessTokenExpired)
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, RefreshSecretKey, RefreshTokenExpired)
+	if err != nil {
+		return nil, err
+	}
+
+	// Save token and activate user
+	err = biz.storage.WithTx(ctx, func(txContext context.Context) error {
+		// Activate user
+		now := time.Now()
+		ua.UserStatus = model.UserActiveStatus
+		ua.RegistrationTime = &now
+		if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
+			return err
+		}
+		// Add token to while list
+		ut := model.UserToken{
+			UserID:       ua.ID,
+			ClientID:     clientID,
+			IDToken:      "",
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		}
+		if err := biz.storage.CreateUserToken(txContext, ut); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AuthorizedData{
+		IdToken:      "idToken",
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
