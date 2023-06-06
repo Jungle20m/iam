@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-type RegisterVerificationBody struct {
+type registerBody struct {
 	ClientID    string `json:"client_id"`
 	PhoneNumber string `json:"phone_number"`
-	OTP         string `json:"otp"`
+	Password    string `json:"password"`
 }
 
 func Register(appCtx common.IAppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var body RegisterBody
+		var body registerBody
 		if err := c.ShouldBind(&body); err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
@@ -36,15 +36,15 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 	}
 }
 
-type RegisterBody struct {
+type registerVerificationBody struct {
 	ClientID    string `json:"client_id"`
 	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	OTP         string `json:"otp"`
 }
 
 func VerifyRegister(appCtx common.IAppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var body RegisterVerificationBody
+		var body registerVerificationBody
 		if err := c.ShouldBind(&body); err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return

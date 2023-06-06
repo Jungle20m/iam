@@ -46,21 +46,23 @@ func (s *Storage) GetLastOneTimePasswordByUserID(ctx context.Context, userID int
 	return &record, nil
 }
 
-//func (s *Storage) GetTWLByAccountIDForUpdate(ctx context.Context, userAccountID int) (*model.TokenWhiteList, error) {
-//	db := s.getConnection(ctx)
-//	var record model.TokenWhiteList
-//	sql := `
-//			SELECT id, user_account_id, access_token, refresh_token
-//			FROM token_white_list
-//			WHERE user_account_id=?
-//			FOR UPDATE;
-//		   `
-//	err := db.Raw(sql, userAccountID).First(&record).Error
-//	if err != nil {
-//		if errors.Is(err, gorm.ErrRecordNotFound) {
-//			return nil, common.ErrRecordNotFound
-//		}
-//		return nil, err
-//	}
-//	return &record, nil
-//}
+func (s *Storage) GetUserTokenForUpdate(ctx context.Context, userID int, clientID string) (*model.UserToken, error) {
+	db := s.getConnection(ctx)
+
+	var record model.UserToken
+
+	sql := `
+			SELECT id, user_id, client_id, id_token, access_token, refresh_token
+			FROM user_token
+			WHERE user_id=? AND client_id=?
+			FOR UPDATE;
+		   `
+	err := db.Raw(sql, userID, clientID).First(&record).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, common.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return &record, nil
+}

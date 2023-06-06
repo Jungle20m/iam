@@ -10,12 +10,12 @@ func (s *Storage) UpdateUserAccount(ctx context.Context, ua model.UserAccount) e
 	return db.Save(&ua).Error
 }
 
-//func (s *Storage) UpdateTWL(ctx context.Context, twl model.TokenWhiteList) error {
-//	db := s.getConnection(ctx)
-//	sql := `
-//			UPDATE token_white_list
-//			SET access_token=?, refresh_token=?
-//			WHERE user_account_id=?
-//		   `
-//	return db.Exec(sql, twl.AccessToken, twl.RefreshToken, twl.UserAccountID).Error
-//}
+func (s *Storage) UpdateUserToken(ctx context.Context, ut model.UserToken) error {
+	db := s.getConnection(ctx)
+	sql := `
+			UPDATE user_token
+			SET id_token=?, access_token=?, refresh_token=?
+			WHERE user_id=? AND client_id=? 
+		   `
+	return db.Exec(sql, ut.IDToken, ut.AccessToken, ut.RefreshToken, ut.UserID, ut.ClientID).Error
+}

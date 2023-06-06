@@ -120,11 +120,11 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 		}
 		return nil, err
 	}
-	// Check if user has existed?
 	if ua.UserStatus != model.UserUnverifiedStatus {
 		return nil, mhttp.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
 	}
-	
+
+	// Validate the last otp
 	otp, err := biz.storage.GetLastOneTimePasswordByUserID(ctx, ua.ID, clientID)
 	if err != nil {
 		return nil, err
@@ -138,6 +138,10 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 		return nil, err
 	}
 	refreshToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, RefreshSecretKey, RefreshTokenExpired)
+	if err != nil {
+		return nil, err
+	}
+	idToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, IdTokenSecretKey, IdTokenExpired)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +159,7 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 		ut := model.UserToken{
 			UserID:       ua.ID,
 			ClientID:     clientID,
-			IDToken:      "",
+			IDToken:      idToken,
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}
@@ -169,7 +173,7 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 	}
 
 	return &model.AuthorizedData{
-		IdToken:      "idToken",
+		IdToken:      idToken,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil

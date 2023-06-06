@@ -10,8 +10,10 @@ import (
 const (
 	AccessSecretKey     = "ACCESS_SECRET_KEY"
 	RefreshSecretKey    = "REFRESH_SECRET_KEY"
+	IdTokenSecretKey    = "ID_TOKEN_SECRET_KEY"
 	AccessTokenExpired  = 1
 	RefreshTokenExpired = 8
+	IdTokenExpired      = 2
 )
 
 func GenerateHashPassword(password string) (string, error) {
