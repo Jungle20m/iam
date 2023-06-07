@@ -1,9 +1,12 @@
 package business
 
 import (
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/modules/auth/model"
 	"time"
 )
 
@@ -75,6 +78,25 @@ func VerifyToken(token, secretKey string) {
 	}
 }
 
-func GenerateIDToken() (string, error) {
-	return "", nil
+func GenerateOTP(ctx context.Context, clientID, phoneNumber string, userID int) (*model.OneTimePassword, error) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "IAM",
+		AccountName: phoneNumber,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error generating OTP key: %v", err)
+	}
+	otpCode, err := totp.GenerateCode(key.Secret(), time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("error generating TOTP code: %v", err)
+	}
+	otp := &model.OneTimePassword{
+		UserID:      userID,
+		ClientID:    clientID,
+		PhoneNumber: phoneNumber,
+		OTP:         otpCode,
+		Expired:     time.Now().Add(time.Second * time.Duration(OtpPeriod)).Unix(),
+		MessageBody: "",
+	}
+	return otp, nil
 }

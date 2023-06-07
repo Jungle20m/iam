@@ -46,9 +46,9 @@ func NewHttpHandler(appCtx common.IAppContext) *gin.Engine {
 
 	v1.POST("/auth/token", transport.Login(appCtx))
 	v1.POST("/auth/revoke", middleware.AuthMW(), transport.Logout(appCtx))
-	//
-	//v1.POST("/password/recover")
-	//v1.POST("/password/verify")
+
+	v1.POST("/password/recover", transport.PasswordRecovery(appCtx))
+	v1.POST("/password/verify", transport.PasswordVerification(appCtx))
 
 	return handler
 

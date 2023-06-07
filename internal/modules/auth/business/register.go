@@ -3,7 +3,6 @@ package business
 import (
 	"context"
 	"fmt"
-	"github.com/pquerna/otp/totp"
 	"iam/common"
 	"iam/internal/modules/auth/model"
 	mhttp "iam/sdk/httpserver"
@@ -15,7 +14,7 @@ const OtpPeriod int = 30
 type IRegisterStorage interface {
 	WithTx(ctx context.Context, fn func(c context.Context) error) error
 	GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error)
-	CreateOneTimePassword(ctx context.Context, uv model.OneTimePassword) (*model.OneTimePassword, error)
+	CreateOneTimePassword(ctx context.Context, otp *model.OneTimePassword) error
 	CreateUserAccount(ctx context.Context, ua *model.UserAccount) error
 	UpdateUserAccount(ctx context.Context, ua model.UserAccount) error
 	GetLastOneTimePasswordByUserID(ctx context.Context, userID int, clientID string) (*model.OneTimePassword, error)
@@ -32,29 +31,6 @@ func NewRegisterBusiness(appCtx common.IAppContext, storage IRegisterStorage) *r
 		appCtx:  appCtx,
 		storage: storage,
 	}
-}
-
-func (biz *registerBusiness) generateOTP(ctx context.Context, clientID, phoneNumber string, userID int) (*model.OneTimePassword, error) {
-	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "IAM",
-		AccountName: phoneNumber,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error generating OTP key: %v", err)
-	}
-	otpCode, err := totp.GenerateCode(key.Secret(), time.Now())
-	if err != nil {
-		return nil, fmt.Errorf("error generating TOTP code: %v", err)
-	}
-	otp := model.OneTimePassword{
-		UserID:      userID,
-		ClientID:    clientID,
-		PhoneNumber: phoneNumber,
-		OTP:         otpCode,
-		Expired:     time.Now().Add(time.Second * time.Duration(OtpPeriod)).Unix(),
-		MessageBody: "",
-	}
-	return biz.storage.CreateOneTimePassword(ctx, otp)
 }
 
 // Register is func to registration account
@@ -101,11 +77,11 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 			userID = ua.ID
 		}
 		// Create OTP
-		_, err = biz.generateOTP(txContext, clientID, phoneNumber, userID)
+		otp, err := GenerateOTP(txContext, clientID, phoneNumber, userID)
 		if err != nil {
 			return mhttp.InternalErrorResponse(err, "Sorry, you cannot register at this time")
 		}
-		return nil
+		return biz.storage.CreateOneTimePassword(ctx, otp)
 	})
 	return err
 }

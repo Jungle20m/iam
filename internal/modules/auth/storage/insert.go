@@ -5,10 +5,9 @@ import (
 	"iam/internal/modules/auth/model"
 )
 
-func (s *Storage) CreateOneTimePassword(ctx context.Context, otp model.OneTimePassword) (*model.OneTimePassword, error) {
+func (s *Storage) CreateOneTimePassword(ctx context.Context, otp *model.OneTimePassword) error {
 	db := s.getConnection(ctx)
-	err := db.Create(&otp).Error
-	return &otp, err
+	return db.Create(&otp).Error
 }
 
 func (s *Storage) CreateUserAccount(ctx context.Context, ua *model.UserAccount) error {
