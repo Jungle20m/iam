@@ -43,6 +43,15 @@ func logFromError(err error) string {
 	return ""
 }
 
+func (e *ErrorResponse) WithStatusCode(code int) *ErrorResponse {
+	if code != 0 {
+		e.StatusCode = code
+	}
+	return e
+}
+
+// ==========================================
+
 func FullErrorResponse(statusCode int, err error, errorLog, message, errorCode string) *ErrorResponse {
 	return &ErrorResponse{
 		StatusCode: statusCode,

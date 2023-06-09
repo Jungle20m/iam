@@ -78,7 +78,5 @@ func (biz *passwordBusiness) Verify(ctx context.Context, clientID, phoneNumber, 
 	}
 	ua.Password = newPassword
 
-	fmt.Println(newPassword)
-
 	return biz.storage.UpdateUserAccount(ctx, *ua)
 }
