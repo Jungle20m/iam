@@ -22,6 +22,7 @@ func init() {
 		log.Fatalf("load config error: %v\n", err)
 	}
 
+	// Database
 	db, err := mgorm.New(conf.Mysql.Dsn)
 	if err != nil {
 		log.Fatalf("connect mgorm error: %v\n", err)

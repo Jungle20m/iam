@@ -6,6 +6,7 @@ import (
 	"iam/common"
 	"iam/internal/server"
 	"iam/sdk/httpserver"
+	tracersdk "iam/sdk/tracer"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,9 +23,19 @@ func NewServer(appCtx common.IAppContext) *cobra.Command {
 
 			conf := appCtx.GetConfig()
 
+			// Tracer
+			tracer := tracersdk.NewTracer(
+				tracersdk.WithEnvironment(conf.App.Environment),
+				tracersdk.WithAppName(conf.App.AppName),
+				tracersdk.WithServiceName(conf.App.ServiceName),
+				tracersdk.WithServerName(fmt.Sprintf("%s:%s", conf.Api.HttpHost, conf.Api.HttpPort)),
+				tracersdk.WithLanguage(conf.App.Language))
+			defer tracer.Flush()
+			tracer.AttachJaegerProvider("http://localhost:14268/api/traces")
+
 			httpHandler := server.NewHttpHandler(appCtx)
 
-			server := httpserver.New(httpHandler, httpserver.WithAddress(conf.App.HttpHost, conf.App.HttpPort))
+			server := httpserver.New(httpHandler, httpserver.WithAddress(conf.Api.HttpHost, conf.Api.HttpPort))
 			server.Start()
 
 			quit := make(chan os.Signal, 1)

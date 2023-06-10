@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"iam/common"
 	"iam/internal/modules/auth/model"
-	mhttp "iam/sdk/httpserver"
+	httpsdk "iam/sdk/httpserver"
+	tracersdk "iam/sdk/tracer"
 	"time"
 )
 
@@ -35,11 +36,14 @@ func NewRegisterBusiness(appCtx common.IAppContext, storage IRegisterStorage) *r
 
 // Register is func to registration account
 func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber, password string) error {
+	ctx, span := tracersdk.NewSpan(ctx)
+	defer span.End()
+
 	err := biz.storage.WithTx(ctx, func(txContext context.Context) error {
 		// Generate hash password
 		hashPassword, err := GenerateHashPassword(password)
 		if err != nil {
-			return mhttp.InternalErrorResponse(
+			return httpsdk.InternalErrorResponse(
 				fmt.Errorf("error to generate hash password: %v", err),
 				"Sorry, you cannot register at this time")
 		}
@@ -51,7 +55,7 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 		if err != nil {
 			// If we faced database error
 			if err != common.ErrRecordNotFound {
-				return mhttp.InternalErrorResponse(err, "")
+				return httpsdk.InternalErrorResponse(err, "")
 			}
 			// If this the first time user registration, create new user account
 			newUA := model.UserAccount{
@@ -61,25 +65,25 @@ func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber
 			}
 			// Create new user account
 			if err := biz.storage.CreateUserAccount(txContext, &newUA); err != nil {
-				return mhttp.InternalErrorResponse(err, "")
+				return httpsdk.InternalErrorResponse(err, "")
 			}
 			userID = newUA.ID
 		} else {
 			// If account has existed
 			if ua.UserStatus != model.UserUnverifiedStatus {
-				return mhttp.BadRequestErrorResponse(nil, "account already exists", "ACCOUNT_ALREADY_EXISTS")
+				return httpsdk.BadRequestErrorResponse(nil, "account already exists", "ACCOUNT_ALREADY_EXISTS")
 			}
 			// If user has registered but hasn't verified
 			ua.Password = hashPassword
 			if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
-				return mhttp.InternalErrorResponse(err, "")
+				return httpsdk.InternalErrorResponse(err, "")
 			}
 			userID = ua.ID
 		}
 		// Create OTP
 		otp, err := GenerateOTP(txContext, clientID, phoneNumber, userID)
 		if err != nil {
-			return mhttp.InternalErrorResponse(err, "Sorry, you cannot register at this time")
+			return httpsdk.InternalErrorResponse(err, "Sorry, you cannot register at this time")
 		}
 		return biz.storage.CreateOneTimePassword(ctx, otp)
 	})
@@ -97,7 +101,7 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 		return nil, err
 	}
 	if ua.UserStatus != model.UserUnverifiedStatus {
-		return nil, mhttp.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
+		return nil, httpsdk.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
 	}
 
 	// Validate the last otp
@@ -106,7 +110,7 @@ func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phone
 		return nil, err
 	}
 	if otp.OTP != otpCode || otp.Expired < time.Now().Unix() {
-		return nil, mhttp.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
+		return nil, httpsdk.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
 	}
 
 	accessToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, AccessSecretKey, AccessTokenExpired)

@@ -7,6 +7,14 @@ import (
 )
 
 type AppConfig struct {
+	AppName     string `yaml:"app_name"`
+	ServiceName string `yaml:"service_name"`
+	Language    string `yaml:"language"`
+	Environment string `yaml:"environment"`
+	Debug       bool   `yaml:"debug"`
+}
+
+type ApiConfig struct {
 	HttpHost string `yaml:"http_host"`
 	HttpPort string `yaml:"http_port"`
 	GrpcHost string `yaml:"grpc_host"`
@@ -31,9 +39,13 @@ type LogConfig struct {
 
 type Config struct {
 	App     AppConfig     `yaml:"app"`
+	Api     ApiConfig     `yaml:"api"`
 	Swagger SwaggerConfig `yaml:"swagger"`
 	Mysql   MysqlConfig   `yaml:"mysql"`
 	Log     LogConfig     `yaml:"log"`
+}
+
+type Tracer struct {
 }
 
 func LoadConfig() (*Config, error) {

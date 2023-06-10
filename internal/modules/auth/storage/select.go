@@ -6,9 +6,13 @@ import (
 	"gorm.io/gorm"
 	"iam/common"
 	"iam/internal/modules/auth/model"
+	tracersdk "iam/sdk/tracer"
 )
 
 func (s *Storage) GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error) {
+	ctx, span := tracersdk.NewSpan(ctx)
+	defer span.End()
+
 	db := s.getConnection(ctx)
 	var record model.UserAccount
 	sql := `

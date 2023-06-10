@@ -1,6 +1,8 @@
 package main
 
-import "iam/cmd"
+import (
+	"iam/cmd"
+)
 
 //import (
 //	"fmt"

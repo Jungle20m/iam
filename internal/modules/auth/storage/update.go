@@ -3,9 +3,14 @@ package storage
 import (
 	"context"
 	"iam/internal/modules/auth/model"
+
+	tracersdk "iam/sdk/tracer"
 )
 
 func (s *Storage) UpdateUserAccount(ctx context.Context, ua model.UserAccount) error {
+	ctx, span := tracersdk.NewSpan(ctx)
+	defer span.End()
+
 	db := s.getConnection(ctx)
 	return db.Save(&ua).Error
 }
