@@ -3,9 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"iam/cmd/api"
-	"iam/common"
 	"iam/config"
-	"iam/sdk/mgorm"
 	"log"
 )
 
@@ -22,16 +20,8 @@ func init() {
 		log.Fatalf("load config error: %v\n", err)
 	}
 
-	// Database
-	db, err := mgorm.New(conf.Mysql.Dsn)
-	if err != nil {
-		log.Fatalf("connect mgorm error: %v\n", err)
-	}
-
-	appCtx := common.NewAppContext(conf, db.Connection)
-
 	// Addition command
-	apiCmd := api.NewServer(appCtx)
+	apiCmd := api.NewServer(conf)
 	rootCmd.AddCommand(apiCmd)
 }
 

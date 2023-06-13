@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"iam/common"
+	"iam/config"
+	"iam/internal/rpc"
 	"iam/internal/server"
 	"iam/sdk/httpserver"
+	"iam/sdk/mgorm"
 	tracersdk "iam/sdk/tracer"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-func NewServer(appCtx common.IAppContext) *cobra.Command {
+func NewServer(conf *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "api",
 		Short: "run iam api",
@@ -21,7 +25,13 @@ func NewServer(appCtx common.IAppContext) *cobra.Command {
 			// Do something
 			fmt.Println("service is started")
 
-			conf := appCtx.GetConfig()
+			// Database
+			db, err := mgorm.New(conf.Mysql.Dsn)
+			if err != nil {
+				log.Fatalf("connect mgorm error: %v\n", err)
+			}
+
+			appCtx := common.NewAppContext(conf, db.Connection)
 
 			// Tracer
 			tracer := tracersdk.NewTracer(
@@ -33,10 +43,19 @@ func NewServer(appCtx common.IAppContext) *cobra.Command {
 			defer tracer.Flush()
 			tracer.AttachJaegerProvider("http://localhost:14268/api/traces")
 
+			// REST api
 			httpHandler := server.NewHttpHandler(appCtx)
-
 			server := httpserver.New(httpHandler, httpserver.WithAddress(conf.Api.HttpHost, conf.Api.HttpPort))
-			server.Start()
+			go func() {
+				server.Start()
+			}()
+
+			// Grpc
+			grpc := rpc.NewServer(appCtx)
+			go func() {
+				fmt.Println("grpc server is starting...")
+				grpc.Serve("", 9090)
+			}()
 
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
