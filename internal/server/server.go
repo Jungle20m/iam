@@ -6,7 +6,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"iam/common"
 	"iam/docs"
-	"iam/internal/modules/auth/transport"
+	transport "iam/internal/modules/auth/http-transport"
 	"iam/internal/server/middleware"
 	"net/http"
 )

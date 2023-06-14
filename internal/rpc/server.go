@@ -7,20 +7,20 @@ import (
 	"google.golang.org/grpc/reflection"
 	"iam/common"
 	"iam/internal/modules/auth/business"
+	"iam/internal/modules/auth/grpc-transport/protoc"
 	"iam/internal/modules/auth/storage"
-	pb "iam/internal/rpc/protoc"
 	"log"
 	"net"
 )
 
 type server struct {
-	pb.UnimplementedAuthServer
+	protoc.UnimplementedAuthServer
 	appCtx common.IAppContext
 }
 
 func NewServer(appCtx common.IAppContext) *server {
 	s := grpc.NewServer()
-	pb.RegisterAuthServer(s, &server{})
+	protoc.RegisterAuthServer(s, &server{})
 
 	return &server{
 		appCtx: appCtx,
@@ -34,7 +34,7 @@ func (s *server) Serve(host string, port int) {
 	}
 	rpc := grpc.NewServer()
 
-	pb.RegisterAuthServer(rpc, s)
+	protoc.RegisterAuthServer(rpc, s)
 
 	reflection.Register(rpc)
 
@@ -43,14 +43,14 @@ func (s *server) Serve(host string, port int) {
 	}
 }
 
-func (s *server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
+func (s *server) Register(ctx context.Context, in *protoc.RegisterRequest) (*protoc.RegisterReply, error) {
 
 	st := storage.NewMysqlStorage(s.appCtx.GetDB())
 	biz := business.NewRegisterBusiness(s.appCtx, st)
 
 	err := biz.Register(ctx, in.GetClientId(), in.GetPhoneNumber(), in.GetPassword())
 	if err != nil {
-		return &pb.RegisterReply{}, err
+		return &protoc.RegisterReply{}, err
 	}
-	return &pb.RegisterReply{Code: 200, Message: "success"}, nil
+	return &protoc.RegisterReply{Code: 200, Message: "success"}, nil
 }

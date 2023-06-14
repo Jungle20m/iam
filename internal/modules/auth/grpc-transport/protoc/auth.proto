@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = "iam/internal/rpc/protoc";
+
+
+message RegisterRequest {
+  string client_id = 1;
+  string phone_number = 2;
+  string password = 3;
+}
+
+message RegisterResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message VerifyRegisterRequest {
+  string client_id = 1;
+  string phone_number = 2;
+  string otp = 3;
+}
+
+message verifyRegisterResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message loginRequest {
+  string phone_number = 1;
+  string password = 2;
+  string client_id = 3;
+}
+
+message loginResponse {
+  string id_token = 1;
+  string access_token = 2;
+  string refreshToken = 3;
+}
+
+// The auth service definition.
+service Auth {
+  // Register is used to register
+  rpc Register (RegisterRequest) returns (RegisterResponse) {}
+  // VerifyRegister to verify register by otp
+  rpc VerifyRegister (VerifyRegisterRequest) returns (verifyRegisterResponse) {}
+  // Login is used to login
+  rpc Login (loginRequest) returns (loginResponse) {}
+}

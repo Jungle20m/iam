@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.2
-// source: internal/rpc/protoc/auth.proto
+// source: internal/modules/auth/grpc-transport/protoc/auth.proto
 
 package protoc
 
@@ -22,10 +22,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthClient interface {
-	// Sends a greeting
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterReply, error)
-	// Sends another greeting
-	VerifyRegister(ctx context.Context, in *VerifyRegisterRequest, opts ...grpc.CallOption) (*VerifyRegisterReply, error)
+	// Register is used to register
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	// VerifyRegister to verify register by otp
+	VerifyRegister(ctx context.Context, in *VerifyRegisterRequest, opts ...grpc.CallOption) (*VerifyRegisterResponse, error)
+	// Login is used to login
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 }
 
 type authClient struct {
@@ -36,8 +38,8 @@ func NewAuthClient(cc grpc.ClientConnInterface) AuthClient {
 	return &authClient{cc}
 }
 
-func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterReply, error) {
-	out := new(RegisterReply)
+func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
 	err := c.cc.Invoke(ctx, "/server.Auth/Register", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,9 +47,18 @@ func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...
 	return out, nil
 }
 
-func (c *authClient) VerifyRegister(ctx context.Context, in *VerifyRegisterRequest, opts ...grpc.CallOption) (*VerifyRegisterReply, error) {
-	out := new(VerifyRegisterReply)
+func (c *authClient) VerifyRegister(ctx context.Context, in *VerifyRegisterRequest, opts ...grpc.CallOption) (*VerifyRegisterResponse, error) {
+	out := new(VerifyRegisterResponse)
 	err := c.cc.Invoke(ctx, "/server.Auth/VerifyRegister", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/server.Auth/Login", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +69,12 @@ func (c *authClient) VerifyRegister(ctx context.Context, in *VerifyRegisterReque
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
 type AuthServer interface {
-	// Sends a greeting
-	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
-	// Sends another greeting
-	VerifyRegister(context.Context, *VerifyRegisterRequest) (*VerifyRegisterReply, error)
+	// Register is used to register
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	// VerifyRegister to verify register by otp
+	VerifyRegister(context.Context, *VerifyRegisterRequest) (*VerifyRegisterResponse, error)
+	// Login is used to login
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -69,11 +82,14 @@ type AuthServer interface {
 type UnimplementedAuthServer struct {
 }
 
-func (UnimplementedAuthServer) Register(context.Context, *RegisterRequest) (*RegisterReply, error) {
+func (UnimplementedAuthServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedAuthServer) VerifyRegister(context.Context, *VerifyRegisterRequest) (*VerifyRegisterReply, error) {
+func (UnimplementedAuthServer) VerifyRegister(context.Context, *VerifyRegisterRequest) (*VerifyRegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyRegister not implemented")
+}
+func (UnimplementedAuthServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -124,6 +140,24 @@ func _Auth_VerifyRegister_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/server.Auth/Login",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).Login(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,7 +173,11 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "VerifyRegister",
 			Handler:    _Auth_VerifyRegister_Handler,
 		},
+		{
+			MethodName: "Login",
+			Handler:    _Auth_Login_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/rpc/protoc/auth.proto",
+	Metadata: "internal/modules/auth/grpc-transport/protoc/auth.proto",
 }
