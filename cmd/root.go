@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
+
 	"iam/cmd/api"
 	"iam/config"
-	"log"
 )
 
 var rootCmd = &cobra.Command{

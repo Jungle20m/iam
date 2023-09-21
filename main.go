@@ -4,14 +4,14 @@ import (
 	"iam/cmd"
 )
 
-//import (
+// import (
 //	"fmt"
 //	"github.com/pquerna/otp/totp"
 //	"iam/common"
 //	"iam/config"
 //	"iam/internal/server"
-//	"iam/sdk/httpserver"
-//	"iam/sdk/mgorm"
+//	"iam/pkg/httpserver"
+//	"iam/pkg/mgorm"
 //	"log"
 //	"os"
 //	"os/signal"
@@ -19,9 +19,9 @@ import (
 //	"time"
 //
 //	_ "github.com/go-sql-driver/mysql"
-//)
+// )
 //
-//func Otp() {
+// func Otp() {
 //	fmt.Println("iam service running")
 //
 //	key, _ := totp.Generate(totp.GenerateOpts{
@@ -42,9 +42,9 @@ import (
 //	ok := totp.Validate(firstOtp, key.Secret())
 //
 //	fmt.Printf("result: %v\n", ok)
-//}
+// }
 //
-//func main() {
+// func main() {
 //	conf, err := config.LoadConfig()
 //	if err != nil {
 //		log.Fatalf("load config error: %v\n", err)
@@ -68,7 +68,7 @@ import (
 //	<-quit
 //
 //	server.Shutdown()
-//}
+// }
 
 func main() {
 	cmd.Execute()
