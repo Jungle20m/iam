@@ -43,13 +43,13 @@ func NewHandler(appCtx common.IAppContext) *gin.Engine {
 	v1.GET("/ping", func(c *gin.Context) { c.JSON(http.StatusOK, "pong") })
 
 	v1.POST("/register", httpHandler.Register(appCtx))
-	v1.POST("/registration/verify", httpHandler.VerifyRegister(appCtx))
+	v1.POST("/login", httpHandler.Login(appCtx))
+	v1.POST("/logout", httpHandler.Logout(appCtx))
+	v1.POST("/password/change")
 
-	v1.POST("/iam/token", httpHandler.Login(appCtx))
-	v1.POST("/iam/revoke", httpHandler.Logout(appCtx))
-
-	v1.POST("/password/recover", httpHandler.PasswordRecovery(appCtx))
-	v1.POST("/password/verify", httpHandler.PasswordVerification(appCtx))
+	// v1.POST("/registration/verify", httpHandler.VerifyRegister(appCtx))
+	// v1.POST("/password/recover", httpHandler.PasswordRecovery(appCtx))
+	// v1.POST("/password/verify", httpHandler.PasswordVerification(appCtx))
 
 	return handler
 }

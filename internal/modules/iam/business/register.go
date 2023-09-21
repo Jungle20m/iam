@@ -2,13 +2,13 @@ package business
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"iam/common"
 	"iam/internal/modules/iam/model"
 	httpsdk "iam/pkg/httpserver"
-	tracersdk "iam/pkg/tracer"
 )
 
 const OtpPeriod int = 30
@@ -36,59 +36,43 @@ func NewRegisterBusiness(appCtx common.IAppContext, storage IRegisterStorage) *r
 }
 
 // Register is func to registration account
-func (biz *registerBusiness) Register(ctx context.Context, clientID, phoneNumber, password string) error {
-	ctx, span := tracersdk.NewSpan(ctx)
-	defer span.End()
+func (biz *registerBusiness) Register(ctx context.Context, phoneNumber, password string) error {
+	// ctx, span := tracersdk.NewSpan(ctx)
+	// defer span.End()
 
-	err := biz.storage.WithTx(ctx, func(txContext context.Context) error {
-		// Generate hash password
-		hashPassword, err := GenerateHashPassword(password)
-		if err != nil {
-			return httpsdk.InternalErrorResponse(
-				fmt.Errorf("error to generate hash password: %v", err),
-				"Sorry, you cannot register at this time")
-		}
+	// Generate hash password
+	hashPassword, err := GenerateHashPassword(password)
+	if err != nil {
+		return httpsdk.InternalErrorResponse(
+			fmt.Errorf("error to generate hash password: %v", err),
+			"Sorry, you cannot register at this time")
+	}
 
-		var userID int
+	userAccount, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
+	if err != nil {
+		// If we faced database error
+		if err != common.ErrRecordNotFound {
+			return httpsdk.InternalErrorResponse(err, "")
+		}
+		// If this the first time user registration, create new user account
+		newUserAccount := model.UserAccount{
+			PhoneNumber: phoneNumber,
+			Password:    hashPassword,
+			UserStatus:  model.UserActiveStatus,
+		}
+		// Create new user account
+		if err := biz.storage.CreateUserAccount(ctx, &newUserAccount); err != nil {
+			return httpsdk.InternalErrorResponse(err, "")
+		}
+		return nil
+	}
 
-		// Create or update user account
-		ua, err := biz.storage.GetUserByPhone(txContext, phoneNumber)
-		if err != nil {
-			// If we faced database error
-			if err != common.ErrRecordNotFound {
-				return httpsdk.InternalErrorResponse(err, "")
-			}
-			// If this the first time user registration, create new user account
-			newUA := model.UserAccount{
-				PhoneNumber: phoneNumber,
-				Password:    hashPassword,
-				UserStatus:  model.UserUnverifiedStatus,
-			}
-			// Create new user account
-			if err := biz.storage.CreateUserAccount(txContext, &newUA); err != nil {
-				return httpsdk.InternalErrorResponse(err, "")
-			}
-			userID = newUA.ID
-		} else {
-			// If account has existed
-			if ua.UserStatus != model.UserUnverifiedStatus {
-				return httpsdk.BadRequestErrorResponse(nil, "account already exists", "ACCOUNT_ALREADY_EXISTS")
-			}
-			// If user has registered but hasn't verified
-			ua.Password = hashPassword
-			if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
-				return httpsdk.InternalErrorResponse(err, "")
-			}
-			userID = ua.ID
-		}
-		// Create OTP
-		otp, err := GenerateOTP(txContext, clientID, phoneNumber, userID)
-		if err != nil {
-			return httpsdk.InternalErrorResponse(err, "Sorry, you cannot register at this time")
-		}
-		return biz.storage.CreateOneTimePassword(ctx, otp)
-	})
-	return err
+	// Check if account exist
+	if userAccount != nil {
+		return errors.New("account has existed")
+	}
+
+	return nil
 }
 
 // VerifyRegister is func to verify otp

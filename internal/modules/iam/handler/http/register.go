@@ -13,7 +13,6 @@ import (
 )
 
 type registerBody struct {
-	ClientID    string `json:"client_id"`
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
 }
@@ -29,10 +28,10 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 			return
 		}
 
-		st := repository.NewMysqlStorage(appCtx.GetDB())
-		biz := business.NewRegisterBusiness(appCtx, st)
+		repo := repository.NewMysqlStorage(appCtx.GetDB())
+		biz := business.NewRegisterBusiness(appCtx, repo)
 
-		err := biz.Register(ctx, body.ClientID, body.PhoneNumber, body.Password)
+		err := biz.Register(ctx, body.PhoneNumber, body.Password)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, httpsdk.HttpErrorResponse(err))
 			return
