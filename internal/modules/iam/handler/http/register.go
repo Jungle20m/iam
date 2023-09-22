@@ -41,29 +41,29 @@ func Register(appCtx common.IAppContext) gin.HandlerFunc {
 	}
 }
 
-type registerVerificationBody struct {
-	ClientID    string `json:"client_id"`
-	PhoneNumber string `json:"phone_number"`
-	OTP         string `json:"otp"`
-}
+// type registerVerificationBody struct {
+// 	ClientID    string `json:"client_id"`
+// 	PhoneNumber string `json:"phone_number"`
+// 	OTP         string `json:"otp"`
+// }
 
-func VerifyRegister(appCtx common.IAppContext) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var body registerVerificationBody
-		if err := c.ShouldBind(&body); err != nil {
-			c.JSON(http.StatusBadRequest, httpsdk.HttpErrorResponse(err))
-			return
-		}
-
-		st := repository.NewMysqlStorage(appCtx.GetDB())
-		biz := business.NewRegisterBusiness(appCtx, st)
-
-		data, err := biz.VerifyRegister(c.Request.Context(), body.ClientID, body.PhoneNumber, body.OTP)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, httpsdk.HttpErrorResponse(err))
-			return
-		}
-
-		c.JSON(http.StatusOK, httpsdk.SimpleSuccessResponse(data))
-	}
-}
+// func VerifyRegister(appCtx common.IAppContext) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		var body registerVerificationBody
+// 		if err := c.ShouldBind(&body); err != nil {
+// 			c.JSON(http.StatusBadRequest, httpsdk.HttpErrorResponse(err))
+// 			return
+// 		}
+//
+// 		st := repository.NewMysqlStorage(appCtx.GetDB())
+// 		biz := business.NewRegisterBusiness(appCtx, st)
+//
+// 		data, err := biz.VerifyRegister(c.Request.Context(), body.ClientID, body.PhoneNumber, body.OTP)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, httpsdk.HttpErrorResponse(err))
+// 			return
+// 		}
+//
+// 		c.JSON(http.StatusOK, httpsdk.SimpleSuccessResponse(data))
+// 	}
+// }

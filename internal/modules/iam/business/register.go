@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"iam/common"
 	"iam/internal/modules/iam/model"
@@ -75,71 +74,71 @@ func (biz *registerBusiness) Register(ctx context.Context, phoneNumber, password
 	return nil
 }
 
-// VerifyRegister is func to verify otp
-func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phoneNumber, otpCode string) (*model.AuthorizedData, error) {
-	// Verify user, check if user has existed?
-	ua, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
-	if err != nil {
-		if err == common.ErrRecordNotFound {
-			return nil, fmt.Errorf("record not found")
-		}
-		return nil, err
-	}
-	if ua.UserStatus != model.UserUnverifiedStatus {
-		return nil, httpsdk.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
-	}
-
-	// Validate the last otp
-	otp, err := biz.storage.GetLastOneTimePasswordByUserID(ctx, ua.ID, clientID)
-	if err != nil {
-		return nil, err
-	}
-	if otp.OTP != otpCode || otp.Expired < time.Now().Unix() {
-		return nil, httpsdk.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
-	}
-
-	accessToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, AccessSecretKey, AccessTokenExpired)
-	if err != nil {
-		return nil, err
-	}
-	refreshToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, RefreshSecretKey, RefreshTokenExpired)
-	if err != nil {
-		return nil, err
-	}
-	idToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, IdTokenSecretKey, IdTokenExpired)
-	if err != nil {
-		return nil, err
-	}
-
-	// Save token and activate user
-	err = biz.storage.WithTx(ctx, func(txContext context.Context) error {
-		// Activate user
-		now := time.Now()
-		ua.UserStatus = model.UserActiveStatus
-		ua.RegistrationTime = &now
-		if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
-			return err
-		}
-		// Add token to while list
-		ut := model.UserToken{
-			UserID:       ua.ID,
-			ClientID:     clientID,
-			IDToken:      idToken,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		}
-		if err := biz.storage.CreateUserToken(txContext, ut); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.AuthorizedData{
-		IdToken:      idToken,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
-}
+// // VerifyRegister is func to verify otp
+// func (biz *registerBusiness) VerifyRegister(ctx context.Context, clientID, phoneNumber, otpCode string) (*model.AuthorizedData, error) {
+// 	// Verify user, check if user has existed?
+// 	ua, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
+// 	if err != nil {
+// 		if err == common.ErrRecordNotFound {
+// 			return nil, fmt.Errorf("record not found")
+// 		}
+// 		return nil, err
+// 	}
+// 	if ua.UserStatus != model.UserUnverifiedStatus {
+// 		return nil, httpsdk.BadRequestErrorResponse(nil, "user has existed", "USER_HAS_EXISTED")
+// 	}
+//
+// 	// Validate the last otp
+// 	otp, err := biz.storage.GetLastOneTimePasswordByUserID(ctx, ua.ID, clientID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if otp.OTP != otpCode || otp.Expired < time.Now().Unix() {
+// 		return nil, httpsdk.BadRequestErrorResponse(nil, "incorrect otp or otp has expired", "OTP_INVALID")
+// 	}
+//
+// 	accessToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, AccessSecretKey, AccessTokenExpired)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	refreshToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, RefreshSecretKey, RefreshTokenExpired)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	idToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, IdTokenSecretKey, IdTokenExpired)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	// Save token and activate user
+// 	err = biz.storage.WithTx(ctx, func(txContext context.Context) error {
+// 		// Activate user
+// 		now := time.Now()
+// 		ua.UserStatus = model.UserActiveStatus
+// 		ua.RegistrationTime = &now
+// 		if err := biz.storage.UpdateUserAccount(txContext, *ua); err != nil {
+// 			return err
+// 		}
+// 		// Add token to while list
+// 		ut := model.UserToken{
+// 			UserID:       ua.ID,
+// 			ClientID:     clientID,
+// 			IDToken:      idToken,
+// 			AccessToken:  accessToken,
+// 			RefreshToken: refreshToken,
+// 		}
+// 		if err := biz.storage.CreateUserToken(txContext, ut); err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	return &model.AuthorizedData{
+// 		IdToken:      idToken,
+// 		AccessToken:  accessToken,
+// 		RefreshToken: refreshToken,
+// 	}, nil
+// }

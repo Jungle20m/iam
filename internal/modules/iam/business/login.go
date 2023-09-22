@@ -12,9 +12,7 @@ import (
 type ILoginStorage interface {
 	WithTx(ctx context.Context, fn func(c context.Context) error) error
 	GetUserByPhone(ctx context.Context, phoneNumber string) (*model.UserAccount, error)
-	GetUserTokenForUpdate(ctx context.Context, userID int, clientID string) (*model.UserToken, error)
 	CreateUserToken(ctx context.Context, ut model.UserToken) error
-	UpdateUserToken(ctx context.Context, ut model.UserToken) error
 }
 
 type loginBusiness struct {
@@ -29,7 +27,11 @@ func NewLoginBusiness(appCtx common.IAppContext, storage ILoginStorage) *loginBu
 	}
 }
 
-func (biz *loginBusiness) Login(ctx context.Context, clientID, phoneNumber, password string) (*model.AuthorizedData, error) {
+type AuthorizedData struct {
+	AccessToken string `json:"access_token"`
+}
+
+func (biz *loginBusiness) Login(ctx context.Context, phoneNumber, password string) (*AuthorizedData, error) {
 	// Get user by phone number
 	ua, err := biz.storage.GetUserByPhone(ctx, phoneNumber)
 	if err != nil {
@@ -58,43 +60,20 @@ func (biz *loginBusiness) Login(ctx context.Context, clientID, phoneNumber, pass
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, RefreshSecretKey, RefreshTokenExpired)
-	if err != nil {
-		return nil, err
-	}
-	idToken, err := GenerateToken(true, ua.ID, ua.UserName, ua.Email, IdTokenSecretKey, IdTokenExpired)
-	if err != nil {
-		return nil, err
-	}
 
 	err = biz.storage.WithTx(ctx, func(txContext context.Context) error {
-		_, err := biz.storage.GetUserTokenForUpdate(txContext, ua.ID, clientID)
-		if err != nil && err != common.ErrRecordNotFound {
-			return err
-		}
-
+		// Create new access token for user login
 		ut := model.UserToken{
-			UserID:       ua.ID,
-			ClientID:     clientID,
-			IDToken:      idToken,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
+			UserID:      ua.ID,
+			AccessToken: accessToken,
 		}
-
-		if err == common.ErrRecordNotFound {
-			return biz.storage.CreateUserToken(txContext, ut)
-		} else {
-			return biz.storage.UpdateUserToken(txContext, ut)
-		}
+		return biz.storage.CreateUserToken(txContext, ut)
 	})
 	if err != nil {
 		return nil, err
-
 	}
 
-	return &model.AuthorizedData{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		IdToken:      idToken,
+	return &AuthorizedData{
+		AccessToken: accessToken,
 	}, nil
 }

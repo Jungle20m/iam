@@ -44,7 +44,7 @@ func NewHandler(appCtx common.IAppContext) *gin.Engine {
 
 	v1.POST("/register", httpHandler.Register(appCtx))
 	v1.POST("/login", httpHandler.Login(appCtx))
-	v1.POST("/logout", httpHandler.Logout(appCtx))
+	v1.POST("/logout", AuthMW(), httpHandler.Logout(appCtx))
 	v1.POST("/password/change")
 
 	// v1.POST("/registration/verify", httpHandler.VerifyRegister(appCtx))

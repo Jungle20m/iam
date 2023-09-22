@@ -14,7 +14,6 @@ import (
 type loginBody struct {
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
-	ClientID    string `json:"client_id"`
 }
 
 func Login(appCtx common.IAppContext) gin.HandlerFunc {
@@ -28,12 +27,12 @@ func Login(appCtx common.IAppContext) gin.HandlerFunc {
 		st := repository.NewMysqlStorage(appCtx.GetDB())
 		biz := business.NewLoginBusiness(appCtx, st)
 
-		auth, err := biz.Login(c.Request.Context(), body.ClientID, body.PhoneNumber, body.Password)
+		resp, err := biz.Login(c.Request.Context(), body.PhoneNumber, body.Password)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, mhttp.HttpErrorResponse(err))
 			return
 		}
 
-		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(auth))
+		c.JSON(http.StatusOK, mhttp.SimpleSuccessResponse(resp))
 	}
 }

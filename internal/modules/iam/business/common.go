@@ -39,7 +39,7 @@ func GenerateToken(authorized bool, userID int, name, email, secretKey string, e
 	now := time.Now()
 
 	claims["authorized"] = authorized
-	claims["iss"] = "https://my-domain.auth0.com"
+	claims["iss"] = "iam service"
 	claims["sub"] = "auth0|123456"
 	claims["name"] = name
 	claims["email"] = email
